@@ -2,34 +2,53 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const GpuInfo: React.FC = () => {
-    const [gpuInfo, setGpuInfo] = useState([]);
+import ApexCharts from 'react-apexcharts';
 
-    const fetchGpuInfo = async () => {
-        try {
-            const response = await axios.get('http://localhost:5000/gpu-info');
-            setGpuInfo(response.data);
-        } catch (error) {
-            console.error("Failed to fetch GPU info:", error);
-        }
-    };
+const GpuInfo = () => {
+    const [series, setSeries] = useState([]);
+    const [gpuData, setGpuData] = useState([]);
 
     useEffect(() => {
-        fetchGpuInfo();
-        const intervalId = setInterval(fetchGpuInfo, 5000);
+        const fetchGpuInfo = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/gpu-info');
+                const gpuData = response.data;
+                setGpuData(gpuData); // ステートを更新
 
-        return () => clearInterval(intervalId);
+                setSeries([
+                    {
+                        name: "Used Memory",
+                        data: gpuData.map(gpu => gpu.memoryUsed)
+                    },
+                    {
+                        name: "Total Memory",
+                        data: gpuData.map(gpu => gpu.memoryTotal)
+                    }
+                ]);
+            } catch (error) {
+                console.error("Failed to fetch GPU info:", error);
+            }
+        };
+
+        fetchGpuInfo();
     }, []);
 
-    return (
-        <div>
-            {gpuInfo.map((info, index) => (
-                <div key={index}>
-                    <strong>Name:</strong> {info.name} | <strong>Memory Used:</strong> {info.memoryUsed} MB
-                </div>
-            ))}
-        </div>
-    );
-}
+    const options = {
+      chart: {
+          type: 'bar' as const,
+          height: 350
+      },
+      plotOptions: {
+          bar: {
+              horizontal: false,
+          },
+      },
+      xaxis: {
+          categories: gpuData.map(gpu => gpu.name) // ステートからgpuDataを直接使用
+      }
+  };
+
+  return <ApexCharts options={options} series={series} type="bar" />;
+};
 
 export default GpuInfo;
