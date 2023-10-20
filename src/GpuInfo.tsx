@@ -8,11 +8,15 @@ const GpuInfo = () => {
     const [series, setSeries] = useState([]);
     const [gpuData, setGpuData] = useState([]);
 
+    axios.defaults.withCredentials = true;
+
     useEffect(() => {
         const fetchGpuInfo = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/gpu-info');
+              const response = await axios.get('http://131.113.48.200:5000/gpu-info');
+                // const response = await axios.get('/api/v1/')
                 const gpuData = response.data;
+                console.log("gpu data", gpuData)
                 setGpuData(gpuData); // ステートを更新
 
                 setSeries([
